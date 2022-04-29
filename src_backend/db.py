@@ -25,8 +25,6 @@ S3_BASE_URL = f"https://{S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com"
 
 db = SQLAlchemy()
 
-# your classes here
-
 class User(db.Model):
   """
   User Model
@@ -39,13 +37,13 @@ class User(db.Model):
 
   def __init__(self, **kwargs):
     """
-    initialize couse object
+    initialize user object
     """
     self.name = kwargs.get("name", "anonymous")
 
   def serialize(self):
     """
-    serialize course object
+    serialize user object
     """ 
     return {
       "id" : self.id,
@@ -79,7 +77,7 @@ class Post(db.Model):
 
   def __init__(self, **kwargs):
     """
-    initializes a user object
+    initializes a post object
     """
     self.user_id = kwargs.get("user_id")
     self.building = kwargs.get("building", "")
@@ -97,6 +95,9 @@ class Post(db.Model):
     self.allergens = kwargs.get("allergens", "")
 
   def serialize(self):
+    """
+    Serialize Post object
+    """
     return {
       "id" :self.id,
       "user_id" : self.user_id,
@@ -129,7 +130,7 @@ class Location(db.Model):
 
   def __init__(self, **kwargs):
     """
-    initialize assignment object
+    initialize location object
     """
     self.name = kwargs.get("name", "")
     self.latitude = kwargs.get("latitude")
@@ -137,7 +138,7 @@ class Location(db.Model):
 
   def serialize(self):
     """
-    serialize assignment object
+    serialize location object
     """
     return {
       "id" : self.id,
