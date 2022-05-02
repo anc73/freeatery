@@ -1,5 +1,3 @@
-# add an additional class for tags, helper function instead of attribute for URL
-
 Freetery is an app which allows users to post about free food. Users can post
 about the existence of free food, update the post if something about the food has
 changed (location, description, etc), and delete the post once the food is gone.
@@ -42,13 +40,17 @@ db.py:
 
     Columns: id, base_url, url, salt, extension, width, height, created_at
 
+  class Tag (db.Model):
+    Model representing allergen tags. A many to many relationship with posts
+
+    Columns: id, allergen, posts
+
 app.py:
   GET /posts/ gets all posts
   GET /users/ gets all users
   GET /posts/<int:id>/ gets information about a specific post
   GET /users/<int:id>/ gets information about a specific user
   GET /posts/filter/ gets all posts of free food with some dietary restrictions
- #  GET /posts/filter/sort/ gets posts of some dietary restrictions sorted by distance
 
   POST /posts/ to create a new post
   POST /user/ to create a new user
