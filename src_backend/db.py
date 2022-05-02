@@ -25,6 +25,12 @@ S3_BASE_URL = f"https://{S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com"
 
 db = SQLAlchemy()
 
+association_table = db.Table(
+  "association",
+  db.Column("post_id", db.Integer, db.ForeignKey("posts.id")),
+  db.Column("tag_id", db.Integer, db.ForeignKey("tags.id"))
+)
+
 class User(db.Model):
   """
   User Model
@@ -61,6 +67,7 @@ class Post(db.Model):
   __tablename__ = "posts"
   id = db.Column(db.Integer, primary_key = True, autoincrement = True)
   user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+  tags = db.Relationship("Tag", secondary=association_table, back_populates="posts")
   building = db.Column(db.String, nullable=False)
   latitude = db.Column(db.Integer, db.ForeignKey("locations.latitude"), nullable = False)
   longitude = db.Column(db.Integer, db.ForeignKey("locations.longitude"), nullable = False)
@@ -68,12 +75,6 @@ class Post(db.Model):
   room = db.Column(db.String)
   description = db.Column(db.String)
   image_URL = db.Column(db.String)
-  vegan = db.Column(db.boolean)
-  vegetarian = db.Column(db.Boolean)
-  gluten_free = db.Column(db.Boolean)
-  dairy_free = db.Column(db.Boolean)
-  nut_free = db.Column(db.Boolean)
-  allergens = db.Column(db.String)
 
   def __init__(self, **kwargs):
     """
@@ -87,12 +88,6 @@ class Post(db.Model):
     self.image_URL = kwargs.get("url")
     self.description = kwargs.get("description", "")
     self.image_URL = kwargs.get("image_URL", "")
-    self.vegan = kwargs.get("vegan", "")
-    self.vegetarian = kwargs.get("vegetarian", "")
-    self.gluten_free = kwargs.get("gluten_free", "")
-    self.dairy_free = kwargs.get("dairy_free", "")
-    self.nut_free = kwargs.get("nut_free", "")
-    self.allergens = kwargs.get("allergens", "")
 
   def serialize(self):
     """
@@ -106,13 +101,8 @@ class Post(db.Model):
       "latitude" : self.latitude,
       "longitude" : self.longitude,
       "description" : self.description,
+      "tags" : [t.simple_serialize() for t in self.tags],
       "image_URL" : self.image_URL,
-      "vegan" : self.vegan,
-      "vegetarian" : self.vegetarian,
-      "gluten_free" : self.gluten_free,
-      "dairy_free" : self.dairy_free,
-      "nut_free" : self.nut_free,
-      "allergens" : self.allergens
     }
 
 
@@ -171,7 +161,7 @@ class Asset(db.Model):
       Serializes an Asset object
       """
       return {
-          "url" : self.url,
+          "url" :self.url(),
           "created_at" : str(self.created_at)
       }
 
@@ -211,12 +201,15 @@ class Asset(db.Model):
 
       img_filename = f"{self.salt}.{self.extension}"
       self.upload(img, img_filename)
-
-      self.url = f"{self.base_url}/{self.salt}.{self.extension}"
+      return f"{self.base_url}/{self.salt}.{self.extension}"
     
     except Exception as e:
       
       print(f"Error when creating image: {e}")
+
+
+  def url(self):
+    return f"{self.base_url}/{self.salt}.{self.extension}"
 
   def upload(self, img, img_filename):
       """
@@ -241,3 +234,40 @@ class Asset(db.Model):
 
       except Exception as e:
           print(f"Error when uploading image: {e}")
+
+class Tag(db.Model):
+  """
+  Tag model
+  """
+  __tablename__= "tags"
+  id = db.Column(db.Integer, primary_key = True, autoincrement = True)
+  allergen = db.Column(db.String, nullable = False)
+  posts = db.relationship("Post", secondary=association_table, back_populates="tags")
+
+  def __init__(self, **kwargs):
+    """
+    Initializes a Tag object
+    """
+    self.allergen = kwargs.get("allergen", "")
+
+  def serialize(self):
+    """
+    Serializes a Tag object
+    """
+    return {
+      "id" : self.id,
+      "allergen" : self.allergen,
+      "posts" : [p.simple_serialize() for p in self.posts]
+    }
+
+  def simple_serialize(self):
+    """
+    Serializes a Tag object
+    """
+    return {
+      "id" : self.id,
+      "allergen" : self.allergen
+    }
+
+
+    
